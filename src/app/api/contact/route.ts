@@ -34,7 +34,7 @@ function getClientIdentifier(request: NextRequest): string {
     return realIp;
   }
 
-  return request.ip ?? 'unknown';
+  return 'unknown';
 }
 
 function isRateLimited(identifier: string): boolean {
@@ -61,7 +61,6 @@ type ContactPayload = {
   email?: string;
   phone?: string;
   message?: string;
-  marketingOptOut?: boolean;
   captchaToken?: string | null;
 };
 
@@ -210,12 +209,11 @@ export async function POST(request: NextRequest) {
       },
       replyTo: trimmedEmail || undefined,
       subject: `New contact form submission from ${normalizedDisplayName}`,
-      text: `Name: ${displayName}\nEmail: ${trimmedEmail || 'N/A'}\nPhone: ${trimmedPhone ?? 'N/A'}\nMarketing Opt Out: ${payload.marketingOptOut ? 'Yes' : 'No'}\n\nMessage:\n${trimmedMessage}`,
+      text: `Name: ${displayName}\nEmail: ${trimmedEmail || 'N/A'}\nPhone: ${trimmedPhone ?? 'N/A'}\n\nMessage:\n${trimmedMessage}`,
       html: `
         <p><strong>Name:</strong> ${safeDisplayName}</p>
         <p><strong>Email:</strong> ${safeEmail}</p>
         <p><strong>Phone:</strong> ${safePhone}</p>
-        <p><strong>Marketing Opt Out:</strong> ${payload.marketingOptOut ? 'Yes' : 'No'}</p>
         <p><strong>Message:</strong></p>
         <p>${safeMessage.replace(/\n/g, '<br />')}</p>
       `,
