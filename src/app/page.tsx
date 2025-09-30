@@ -24,6 +24,48 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [captchaToken] = useState<string | null>(null);
 
+  const scrollToContact = () => {
+    const contactSection = document.getElementById("contact");
+    if (contactSection) {
+      // Get the actual header height dynamically
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.offsetHeight : 106;
+      const elementPosition = contactSection.offsetTop - headerHeight - 20; // Extra 20px padding
+      window.scrollTo({
+        top: Math.max(0, elementPosition),
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const scrollToCompany = () => {
+    const companySection = document.getElementById("company");
+    if (companySection) {
+      // Get the actual header height dynamically
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.offsetHeight : 106;
+      const elementPosition = companySection.offsetTop - headerHeight - 20; // Extra 20px padding
+      window.scrollTo({
+        top: Math.max(0, elementPosition),
+        behavior: "smooth",
+      });
+    }
+  };
+
+  const scrollToServices = () => {
+    const servicesSection = document.getElementById("services");
+    if (servicesSection) {
+      // Get the actual header height dynamically
+      const header = document.querySelector("header");
+      const headerHeight = header ? header.offsetHeight : 106;
+      const elementPosition = servicesSection.offsetTop - headerHeight - 20; // Extra 20px padding
+      window.scrollTo({
+        top: Math.max(0, elementPosition),
+        behavior: "smooth",
+      });
+    }
+  };
+
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
@@ -135,47 +177,47 @@ export default function Home() {
               </p>
             </div>
             <nav className="hidden lg:flex items-center space-x-8 xl:space-x-12">
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm"
+              <button
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm bg-transparent border-none cursor-pointer"
               >
                 Home
-              </a>
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm"
+              </button>
+              <button
+                onClick={scrollToCompany}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm bg-transparent border-none cursor-pointer"
               >
                 Company
-              </a>
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm"
+              </button>
+              <button
+                onClick={scrollToServices}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm bg-transparent border-none cursor-pointer"
               >
                 Services
-              </a>
+              </button>
               <a
                 href="#"
                 className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm"
               >
                 Resources
               </a>
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm"
+              <button
+                onClick={scrollToContact}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-sm bg-transparent border-none cursor-pointer"
               >
                 Contact Us
-              </a>
+              </button>
             </nav>
-            <a
+            <button
+              onClick={scrollToContact}
               className="hidden lg:block font-[family-name:var(--font-figtree)] rounded-full px-8 xl:px-16 py-2.5 transition-colors hover:opacity-90 text-sm xl:text-base"
               style={{
                 backgroundColor: "var(--brand-yellow)",
                 color: "#000",
               }}
-              href="#"
             >
               Request a Demo
-            </a>{" "}
+            </button>{" "}
             {/* Mobile Menu Button */}
             <button
               className="lg:hidden flex flex-col space-y-1"
@@ -204,27 +246,33 @@ export default function Home() {
         {isMobileMenuOpen && (
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg border-t border-gray-200">
             <nav className="flex flex-col p-4 space-y-4">
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
+              <button
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2 bg-transparent border-none cursor-pointer text-left"
               >
                 Home
-              </a>
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
+              </button>
+              <button
+                onClick={() => {
+                  scrollToCompany();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2 bg-transparent border-none cursor-pointer text-left"
               >
                 Company
-              </a>
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
+              </button>
+              <button
+                onClick={() => {
+                  scrollToServices();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2 bg-transparent border-none cursor-pointer text-left"
               >
                 Services
-              </a>
+              </button>
               <a
                 href="#"
                 className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2"
@@ -232,24 +280,28 @@ export default function Home() {
               >
                 Resources
               </a>
-              <a
-                href="#"
-                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2"
-                onClick={() => setIsMobileMenuOpen(false)}
+              <button
+                onClick={() => {
+                  scrollToContact();
+                  setIsMobileMenuOpen(false);
+                }}
+                className="text-foreground hover:text-blue-600 font-normal transition-colors font-[family-name:var(--font-poppins)] text-base py-2 bg-transparent border-none cursor-pointer text-left"
               >
                 Contact Us
-              </a>
-              <a
+              </button>
+              <button
+                onClick={() => {
+                  scrollToContact();
+                  setIsMobileMenuOpen(false);
+                }}
                 className="font-[family-name:var(--font-figtree)] rounded-full px-6 py-2.5 transition-colors hover:opacity-90 text-center mt-4"
                 style={{
                   backgroundColor: "var(--brand-yellow)",
                   color: "#000",
                 }}
-                href="#"
-                onClick={() => setIsMobileMenuOpen(false)}
               >
                 Request a Demo
-              </a>
+              </button>
             </nav>
           </div>
         )}
@@ -296,16 +348,16 @@ export default function Home() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
-                  <a
+                  <button
+                    onClick={scrollToContact}
                     className="font-[family-name:var(--font-figtree)] rounded-full px-8 md:px-12 py-3 transition-colors hover:opacity-90 text-sm md:text-base whitespace-nowrap"
                     style={{
                       backgroundColor: "var(--brand-yellow)",
                       color: "#000",
                     }}
-                    href="#"
                   >
                     Talk to a Expert
-                  </a>
+                  </button>
 
                   <a
                     className="w-12 h-12 rounded-full flex items-center justify-center transition-colors hover:opacity-90"
@@ -333,7 +385,10 @@ export default function Home() {
       </AnimatedSection>{" "}
       {/* Who We Are Section */}
       <AnimatedSection animation="fade-in-left" delay={100}>
-        <section className="relative w-full py-12 md:py-20 bg-white">
+        <section
+          id="company"
+          className="relative w-full py-12 md:py-20 bg-white"
+        >
           <div className="w-full flex items-center justify-center px-4 md:px-6">
             <div className="w-full max-w-[1275px] flex flex-col lg:flex-row lg:items-start lg:space-x-12 space-y-8 lg:space-y-0">
               {/* First column - 40% */}
@@ -383,16 +438,16 @@ export default function Home() {
                 </p>
 
                 <div className="mt-6 md:mt-8">
-                  <a
+                  <button
+                    onClick={scrollToContact}
                     className="font-[family-name:var(--font-figtree)] rounded-full px-6 md:px-8 py-2.5 md:py-3 transition-colors hover:opacity-90 text-sm md:text-base"
                     style={{
                       backgroundColor: "var(--brand-yellow)",
                       color: "#000",
                     }}
-                    href="#"
                   >
                     Talk to an Expert
-                  </a>
+                  </button>
                 </div>
               </div>
             </div>
@@ -402,6 +457,7 @@ export default function Home() {
       {/* Why Choose Us Section */}
       <AnimatedSection animation="fade-in-right" delay={150}>
         <section
+          id="services"
           className="relative w-full px-4 md:px-6 lg:px-20 py-12 md:py-20"
           style={{ backgroundColor: "#fff6db" }}
         >
@@ -567,7 +623,10 @@ export default function Home() {
       </AnimatedSection>{" "}
       {/* Contact Section */}
       <AnimatedSection animation="fade-in-left" delay={200}>
-        <section className="relative w-full py-12 md:py-20 bg-white">
+        <section
+          id="contact"
+          className="relative w-full py-12 md:py-20 bg-white"
+        >
           <div className="w-full flex items-center justify-center px-4 md:px-6">
             <div className="w-full max-w-[1275px] flex flex-col lg:flex-row lg:items-start lg:space-x-12 space-y-8 lg:space-y-0">
               {/* Column 1 - Contact Information */}
