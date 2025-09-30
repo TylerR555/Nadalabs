@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import SibApiV3Sdk from 'sib-api-v3-sdk';
 
 export const runtime = 'nodejs';
 
@@ -34,7 +33,7 @@ function getClientIdentifier(request: NextRequest): string {
     return realIp;
   }
 
-  return request.ip ?? 'unknown';
+  return 'unknown';
 }
 
 function isRateLimited(identifier: string): boolean {
@@ -166,19 +165,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Captcha verification failed.' }, { status: 400 });
   }
 
-  const smtpUser = process.env.SMTP_USER;
-  const smtpPass = process.env.SMTP_PASS;
+  const brevoApiKey = process.env.BREVO_API_KEY;
   const contactRecipient = process.env.CONTACT_RECIPIENT ?? 'admin@nadalabs.biz';
 
-  if (!smtpUser || !smtpPass) {
-    console.error('Missing Brevo configuration environment variables.');
+  if (!brevoApiKey) {
+    console.error('Missing Brevo API key environment variable.');
     return NextResponse.json({ error: 'Email service not configured.' }, { status: 500 });
   }
-
-  const apiClient = SibApiV3Sdk.ApiClient.instance;
-  const apiKeyAuth = apiClient.authentications['api-key'] as { apiKey?: string };
-  apiKeyAuth.apiKey = smtpPass;
-  const transactionalEmailsApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
   const trimmedEmail = payload.email?.trim() ?? '';
   const trimmedPhone = payload.phone?.trim();
@@ -195,10 +188,10 @@ export async function POST(request: NextRequest) {
   const safeMessage = escapeHtml(trimmedMessage);
 
   try {
-    await transactionalEmailsApi.sendTransacEmail({
+    const emailData = {
       sender: {
         name: normalizedDisplayName,
-        email: smtpUser,
+        email: 'noreply@nadalabs.biz',
       },
       to: [
         {
@@ -220,7 +213,22 @@ export async function POST(request: NextRequest) {
         <p><strong>Message:</strong></p>
         <p>${safeMessage.replace(/\n/g, '<br />')}</p>
       `,
+    };
+
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': brevoApiKey,
+      },
+      body: JSON.stringify(emailData),
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Brevo API error:', response.status, errorText);
+      return NextResponse.json({ error: 'Failed to send your message. Please try again later.' }, { status: 502 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {
