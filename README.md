@@ -26,14 +26,12 @@ To enable the Brevo-powered contact form, add the following environment variable
 
 | Variable | Description |
 | --- | --- |
-| `SMTP_HOST` | SMTP host provided by Brevo (e.g. `smtp-relay.brevo.com`). |
-| `SMTP_PORT` | SMTP port (Brevo recommends `587`). |
-| `SMTP_USER` | Brevo SMTP username. |
-| `SMTP_PASS` | Brevo SMTP password/API key. |
+| `SMTP_USER` | Email address that should appear as the sender of transactional messages (Brevo SMTP login). |
+| `SMTP_PASS` | Brevo transactional email API key used for authenticating SMTP/API requests. |
 | `CONTACT_RECIPIENT` | Email address that should receive contact form submissions. Defaults to `admin@nadalabs.biz` if unset. |
 | `CONTACT_CAPTCHA_SECRET` | *(Optional)* Secret for your captcha provider if you enable bot protection. |
 
-After configuring the variables, redeploy the project so the new settings take effect.
+After configuring the variables, make sure the Brevo transactional email API is enabled for your account, then redeploy the project so the new settings take effect.
 
 ## Learn More
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import nodemailer from 'nodemailer';
+import SibApiV3Sdk from 'sib-api-v3-sdk';
 
 export const runtime = 'nodejs';
 
@@ -34,7 +34,7 @@ function getClientIdentifier(request: NextRequest): string {
     return realIp;
   }
 
-  return 'unknown';
+  return request.ip ?? 'unknown';
 }
 
 function isRateLimited(identifier: string): boolean {
@@ -61,6 +61,7 @@ type ContactPayload = {
   email?: string;
   phone?: string;
   message?: string;
+  marketingOptOut?: boolean;
   captchaToken?: string | null;
 };
 
@@ -165,26 +166,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Captcha verification failed.' }, { status: 400 });
   }
 
-  const smtpHost = process.env.SMTP_HOST;
-  const smtpPort = process.env.SMTP_PORT;
   const smtpUser = process.env.SMTP_USER;
   const smtpPass = process.env.SMTP_PASS;
   const contactRecipient = process.env.CONTACT_RECIPIENT ?? 'admin@nadalabs.biz';
 
-  if (!smtpHost || !smtpPort || !smtpUser || !smtpPass) {
-    console.error('Missing SMTP configuration environment variables.');
+  if (!smtpUser || !smtpPass) {
+    console.error('Missing Brevo configuration environment variables.');
     return NextResponse.json({ error: 'Email service not configured.' }, { status: 500 });
   }
 
-  const transporter = nodemailer.createTransport({
-    host: smtpHost,
-    port: Number(smtpPort),
-    secure: Number(smtpPort) === 465,
-    auth: {
-      user: smtpUser,
-      pass: smtpPass,
-    },
-  });
+  const apiClient = SibApiV3Sdk.ApiClient.instance;
+  const apiKeyAuth = apiClient.authentications['api-key'] as { apiKey?: string };
+  apiKeyAuth.apiKey = smtpPass;
+  const transactionalEmailsApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
   const trimmedEmail = payload.email?.trim() ?? '';
   const trimmedPhone = payload.phone?.trim();
@@ -201,19 +195,28 @@ export async function POST(request: NextRequest) {
   const safeMessage = escapeHtml(trimmedMessage);
 
   try {
-    await transporter.sendMail({
-      to: contactRecipient,
-      from: {
+    await transactionalEmailsApi.sendTransacEmail({
+      sender: {
         name: normalizedDisplayName,
-        address: smtpUser,
+        email: smtpUser,
       },
-      replyTo: trimmedEmail || undefined,
+      to: [
+        {
+          email: contactRecipient,
+        },
+      ],
+      replyTo: trimmedEmail
+        ? {
+            email: trimmedEmail,
+          }
+        : undefined,
       subject: `New contact form submission from ${normalizedDisplayName}`,
-      text: `Name: ${displayName}\nEmail: ${trimmedEmail || 'N/A'}\nPhone: ${trimmedPhone ?? 'N/A'}\n\nMessage:\n${trimmedMessage}`,
-      html: `
+      textContent: `Name: ${displayName}\nEmail: ${trimmedEmail || 'N/A'}\nPhone: ${trimmedPhone ?? 'N/A'}\nMarketing Opt Out: ${payload.marketingOptOut ? 'Yes' : 'No'}\n\nMessage:\n${trimmedMessage}`,
+      htmlContent: `
         <p><strong>Name:</strong> ${safeDisplayName}</p>
         <p><strong>Email:</strong> ${safeEmail}</p>
         <p><strong>Phone:</strong> ${safePhone}</p>
+        <p><strong>Marketing Opt Out:</strong> ${payload.marketingOptOut ? 'Yes' : 'No'}</p>
         <p><strong>Message:</strong></p>
         <p>${safeMessage.replace(/\n/g, '<br />')}</p>
       `,
