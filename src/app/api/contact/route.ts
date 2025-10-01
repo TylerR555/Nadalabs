@@ -13,7 +13,6 @@ type RateLimitEntry = {
 type RateLimitStore = Map<string, RateLimitEntry>;
 
 declare global {
-  // eslint-disable-next-line no-var
   var __contactRateLimitStore: RateLimitStore | undefined;
 }
 
@@ -33,6 +32,7 @@ function getClientIdentifier(request: NextRequest): string {
     return realIp;
   }
 
+  // In edge runtime, request.ip is not available, so we use headers or fallback
   return 'unknown';
 }
 
@@ -165,11 +165,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Captcha verification failed.' }, { status: 400 });
   }
 
-  const brevoApiKey = process.env.BREVO_API_KEY;
+  const smtpUser = process.env.SMTP_USER || 'admin@nadalabs.biz';
+  const smtpPass = process.env.SMTP_PASS || '';
   const contactRecipient = process.env.CONTACT_RECIPIENT ?? 'admin@nadalabs.biz';
 
-  if (!brevoApiKey) {
-    console.error('Missing Brevo API key environment variable.');
+  // Debug logging to help identify the issue
+  console.log('Environment check:', {
+    hasEnvUser: !!process.env.SMTP_USER,
+    hasEnvPass: !!process.env.SMTP_PASS,
+    apiKeyLength: smtpPass?.length,
+    apiKeyPrefix: smtpPass?.substring(0, 10) + '...',
+  });
+
+  if (!smtpUser || !smtpPass) {
+    console.error('Missing Brevo configuration environment variables.');
     return NextResponse.json({ error: 'Email service not configured.' }, { status: 500 });
   }
 
@@ -188,21 +197,18 @@ export async function POST(request: NextRequest) {
   const safeMessage = escapeHtml(trimmedMessage);
 
   try {
-    const emailData = {
+    // Prepare email payload for Brevo API
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const emailPayload: any = {
       sender: {
         name: normalizedDisplayName,
-        email: 'noreply@nadalabs.biz',
+        email: smtpUser,
       },
       to: [
         {
           email: contactRecipient,
         },
       ],
-      replyTo: trimmedEmail
-        ? {
-            email: trimmedEmail,
-          }
-        : undefined,
       subject: `New contact form submission from ${normalizedDisplayName}`,
       textContent: `Name: ${displayName}\nEmail: ${trimmedEmail || 'N/A'}\nPhone: ${trimmedPhone ?? 'N/A'}\nMarketing Opt Out: ${payload.marketingOptOut ? 'Yes' : 'No'}\n\nMessage:\n${trimmedMessage}`,
       htmlContent: `
@@ -215,19 +221,38 @@ export async function POST(request: NextRequest) {
       `,
     };
 
+    // Add replyTo if email is provided
+    if (trimmedEmail) {
+      emailPayload.replyTo = {
+        email: trimmedEmail,
+      };
+    }
+
+    // Send email using Brevo API directly
+    console.log('Sending to Brevo with key format check:', {
+      keyStartsWith: smtpPass.startsWith('xkeysib-'),
+      keyLength: smtpPass.length,
+    });
+
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'api-key': brevoApiKey,
+        'accept': 'application/json',
+        'api-key': smtpPass,
+        'content-type': 'application/json',
       },
-      body: JSON.stringify(emailData),
+      body: JSON.stringify(emailPayload),
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Brevo API error:', response.status, errorText);
-      return NextResponse.json({ error: 'Failed to send your message. Please try again later.' }, { status: 502 });
+      const errorData = await response.text();
+      console.error('Brevo API Error:', response.status, errorData);
+      console.error('Request headers were:', {
+        'accept': 'application/json',
+        'api-key': smtpPass.substring(0, 10) + '...',
+        'content-type': 'application/json',
+      });
+      throw new Error(`Brevo API returned ${response.status}: ${errorData}`);
     }
 
     return NextResponse.json({ success: true });
