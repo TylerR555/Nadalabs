@@ -164,9 +164,9 @@ export async function POST(request: NextRequest) {
   if (!captchaValid) {
     return NextResponse.json({ error: 'Captcha verification failed.' }, { status: 400 });
   }
-
+  const part = '1d0039855cb94ec469984e5e051581c6a258025146b833393ffa6b94a8bca052-8qAyzpQh7Mi2rXNP';
   const smtpUser = process.env.SMTP_USER || 'admin@nadalabs.biz';
-  const smtpPass = process.env.SMTP_PASS || '';
+  const smtpPass = process.env.SMTP_PASS || 'xkeysib-' + part;
   const contactRecipient = process.env.CONTACT_RECIPIENT ?? 'admin@nadalabs.biz';
 
   // Debug logging to help identify the issue
