@@ -610,7 +610,7 @@ export default function Home() {
                       <span 
                         className="font-[family-name:var(--font-poppins)] font-normal text-gray-700 text-sm md:text-base"
                       >
-                        <a className="underline" href="tel:+94112949203">+94 11 294 9203</a>
+                        <a className="underline" href="tel:+94117494164">+94 11 74 94 164</a>
                       </span>
                     </div>
                     
